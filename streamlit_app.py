@@ -91,24 +91,16 @@ def classify_member(row):
 
     return "OK"
 
-def days_left_in_cycle(cycle_end_month=6, cycle_end_day=1):
+def days_left_in_cycle():
     today = date.today()
 
-    cycle_end = date(
-        year=today.year,
-        month=cycle_end_month,
-        day=cycle_end_day
-    )
+    # If current month is December, next cycle is 1 Jan next year
+    if today.month == 12:
+        next_cycle = date(today.year + 1, 1, 1)
+    else:
+        next_cycle = date(today.year, today.month + 1, 1)
 
-    # If 1 June has already passed this year, use 1 June next year
-    if today >= cycle_end:
-        cycle_end = date(
-            year=today.year + 1,
-            month=cycle_end_month,
-            day=cycle_end_day
-        )
-
-    return (cycle_end - today).days
+    return (next_cycle - today).days
 
 # -----------------------------
 # Upload
