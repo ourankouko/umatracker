@@ -466,25 +466,34 @@ else:
 
 
 # -----------------------------
-# Watchlist
+# Member table / Watchlist
 # -----------------------------
 
 st.divider()
-st.subheader("Watchlist")
+st.subheader("Member Table")
 
-watch = active_data[[name_col]].copy()
+def format_thousands(x):
+    if pd.isna(x):
+        return ""
 
-if daily_num_col:
-    watch["daily_gain"] = active_data[daily_num_col]
+    try:
+        return f"{float(x):,.0f}"
+    except (ValueError, TypeError):
+        return x
 
-if avg_num_col:
-    watch["avg_7d"] = active_data[avg_num_col]
+member_table = active_data[[name_col]].copy()
 
-if monthly_num_col:
-    watch["monthly_gain"] = active_data[monthly_num_col]
-    watch["on_pace_10m"] = watch["monthly_gain"] >= 10_000_000
+if daily_num_col is not None:
+    member_table["daily_gain"] = active_data[daily_num_col]
 
-watch["status"] = watch.apply(classify_member, axis=1)
+if avg_num_col is not None:
+    member_table["avg_7d"] = active_data[avg_num_col]
+
+if monthly_num_col is not None:
+    member_table["monthly_gain"] = active_data[monthly_num_col]
+    member_table["on_pace_10m"] = member_table["monthly_gain"] >= 10_000_000
+
+member_table["status"] = member_table.apply(classify_member, axis=1)
 
 status_order = {
     "Replace / inactive risk": 0,
@@ -495,62 +504,26 @@ status_order = {
     "OK": 5
 }
 
-watch["status_order"] = watch["status"].map(status_order).fillna(99)
+member_table["status_order"] = member_table["status"].map(status_order).fillna(99)
 
 sort_cols = ["status_order"]
 ascending = [True]
 
-if "avg_7d" in watch.columns:
+if "avg_7d" in member_table.columns:
     sort_cols.append("avg_7d")
     ascending.append(True)
+elif "monthly_gain" in member_table.columns:
+    sort_cols.append("monthly_gain")
+    ascending.append(True)
 
-watch = watch.sort_values(sort_cols, ascending=ascending)
-watch_display = watch.drop(columns=["status_order"])
+member_table = member_table.sort_values(sort_cols, ascending=ascending)
 
-st.dataframe(
-    watch_display,
-    use_container_width=True,
-    hide_index=True
-)
+# Drop helper sort column
+member_table = member_table.drop(columns=["status_order"])
 
-
-# -----------------------------
-# Member contribution table
-# -----------------------------
-
-st.divider()
-st.subheader("Member Table")
-
-def format_thousands(x):
-    if pd.isna(x):
-        return ""
-    
-    try:
-        return f"{float(x):,.0f}"
-    except (ValueError, TypeError):
-        return x
-
-# Columns to display only
-member_cols = [name_col]
-
-for raw_col in [daily_col, avg_col, monthly_col]:
-    if raw_col is not None:
-        member_cols.append(raw_col)
-
-member_table = active_data.copy()
-
-# Sort using numeric columns, but do not display them
-if avg_num_col is not None:
-    member_table = member_table.sort_values(avg_num_col, ascending=False)
-elif monthly_num_col is not None:
-    member_table = member_table.sort_values(monthly_num_col, ascending=False)
-
-# Keep only display columns after sorting
-member_table = member_table[member_cols].copy()
-
-# Format displayed numbers with thousands separator
-for col in [daily_col, avg_col, monthly_col]:
-    if col is not None and col in member_table.columns:
+# Format large numbers for display
+for col in ["daily_gain", "avg_7d", "monthly_gain"]:
+    if col in member_table.columns:
         member_table[col] = member_table[col].apply(format_thousands)
 
 st.dataframe(
