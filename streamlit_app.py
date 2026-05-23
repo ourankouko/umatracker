@@ -521,23 +521,37 @@ st.dataframe(
 st.divider()
 st.subheader("Member Table")
 
+def format_thousands(x):
+    if pd.isna(x):
+        return ""
+    
+    try:
+        return f"{float(x):,.0f}"
+    except (ValueError, TypeError):
+        return x
+
+# Columns to display only
 member_cols = [name_col]
 
-for raw_col, num_col in [
-    (daily_col, daily_num_col),
-    (avg_col, avg_num_col),
-    (monthly_col, monthly_num_col),
-]:
-    if raw_col is not None and num_col is not None:
+for raw_col in [daily_col, avg_col, monthly_col]:
+    if raw_col is not None:
         member_cols.append(raw_col)
-        member_cols.append(num_col)
 
-member_table = active_data[member_cols].copy()
+member_table = active_data.copy()
 
-if avg_num_col:
+# Sort using numeric columns, but do not display them
+if avg_num_col is not None:
     member_table = member_table.sort_values(avg_num_col, ascending=False)
-elif monthly_num_col:
+elif monthly_num_col is not None:
     member_table = member_table.sort_values(monthly_num_col, ascending=False)
+
+# Keep only display columns after sorting
+member_table = member_table[member_cols].copy()
+
+# Format displayed numbers with thousands separator
+for col in [daily_col, avg_col, monthly_col]:
+    if col is not None and col in member_table.columns:
+        member_table[col] = member_table[col].apply(format_thousands)
 
 st.dataframe(
     member_table,
