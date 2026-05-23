@@ -1,6 +1,8 @@
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+from datetime import date
+
 
 st.set_page_config(
     page_title="Uma Club Tracker",
@@ -89,6 +91,24 @@ def classify_member(row):
 
     return "OK"
 
+def days_left_in_cycle(cycle_end_month=6, cycle_end_day=1):
+    today = date.today()
+
+    cycle_end = date(
+        year=today.year,
+        month=cycle_end_month,
+        day=cycle_end_day
+    )
+
+    # If 1 June has already passed this year, use 1 June next year
+    if today >= cycle_end:
+        cycle_end = date(
+            year=today.year + 1,
+            month=cycle_end_month,
+            day=cycle_end_day
+        )
+
+    return (cycle_end - today).days
 
 # -----------------------------
 # Upload
@@ -302,7 +322,7 @@ with b2:
     days_left = st.number_input(
         "Days left in cycle",
         min_value=1,
-        value=12,
+        value=days_left_in_cycle(),
         step=1
     )
 
