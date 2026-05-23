@@ -288,9 +288,15 @@ if avg_num_col:
     d3.metric("Below 333k/day avg", int(below_333k))
     d4.metric("Below 500k/day avg", int(below_500k))
 
+e1, e2 = st.columns(2)
+
+if monthly_num_col:
+    below_10m_monthly = (active_data[monthly_num_col] < 10_000_000).sum()
+    e1.metric("Members below 10M monthly", int(below_10m_monthly))
+
 if daily_num_col:
     zero_today = (active_data[daily_num_col] == 0).sum()
-    st.metric("Members with 0 gain today", int(zero_today))
+    e2.metric("Members with 0 gain today", int(zero_today))
 
 
 # -----------------------------
