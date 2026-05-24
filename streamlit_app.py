@@ -12,9 +12,6 @@ st.set_page_config(
 st.title("Uma Club Tracker")
 st.caption("Upload uma.moe / Chronogenesis-style club stats CSV to track club activity.")
 
-st.write(active_data[monthly_num_col].head())
-st.write(active_data[monthly_num_col].dtype)
-
 # -----------------------------
 # Helper functions
 # -----------------------------
