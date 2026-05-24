@@ -534,15 +534,15 @@ st.dataframe(
     column_config={
         "daily_gain": st.column_config.NumberColumn(
             "Daily gain",
-            format="%d"
+            format="localized"
         ),
         "avg_7d": st.column_config.NumberColumn(
             "7-day avg",
-            format="%d"
+            format="localized"
         ),
         "monthly_gain": st.column_config.NumberColumn(
             "Monthly gain",
-            format="%d"
+            format="localized"
         ),
         "on_pace_10m": st.column_config.CheckboxColumn(
             "On pace 10M"
