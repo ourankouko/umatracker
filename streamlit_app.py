@@ -478,25 +478,25 @@ else:
 st.divider()
 st.subheader("Member Table")
 
-def format_thousands(x):
-    if pd.isna(x):
-        return ""
-
-    try:
-        return f"{float(x):,.0f}"
-    except (ValueError, TypeError):
-        return x
-
 member_table = active_data[[name_col]].copy()
 
 if daily_num_col is not None:
-    member_table["daily_gain"] = active_data[daily_num_col]
+    member_table["daily_gain"] = pd.to_numeric(
+        active_data[daily_num_col].astype(str).str.replace(",", "", regex=False),
+        errors="coerce"
+    )
 
 if avg_num_col is not None:
-    member_table["avg_7d"] = active_data[avg_num_col]
+    member_table["avg_7d"] = pd.to_numeric(
+        active_data[avg_num_col].astype(str).str.replace(",", "", regex=False),
+        errors="coerce"
+    )
 
 if monthly_num_col is not None:
-    member_table["monthly_gain"] = active_data[monthly_num_col]
+    member_table["monthly_gain"] = pd.to_numeric(
+        active_data[monthly_num_col].astype(str).str.replace(",", "", regex=False),
+        errors="coerce"
+    )
     member_table["on_pace_10m"] = member_table["monthly_gain"] >= 10_000_000
 
 member_table["status"] = member_table.apply(classify_member, axis=1)
@@ -527,15 +527,30 @@ member_table = member_table.sort_values(sort_cols, ascending=ascending)
 # Drop helper sort column
 member_table = member_table.drop(columns=["status_order"])
 
-# Format large numbers for display
-for col in ["daily_gain", "avg_7d", "monthly_gain"]:
-    if col in member_table.columns:
-        member_table[col] = member_table[col].apply(format_thousands)
-
 st.dataframe(
     member_table,
     use_container_width=True,
-    hide_index=True
+    hide_index=True,
+    column_config={
+        "daily_gain": st.column_config.NumberColumn(
+            "Daily gain",
+            format="%d"
+        ),
+        "avg_7d": st.column_config.NumberColumn(
+            "7-day avg",
+            format="%d"
+        ),
+        "monthly_gain": st.column_config.NumberColumn(
+            "Monthly gain",
+            format="%d"
+        ),
+        "on_pace_10m": st.column_config.CheckboxColumn(
+            "On pace 10M"
+        ),
+        "status": st.column_config.TextColumn(
+            "Status"
+        ),
+    }
 )
 
 
