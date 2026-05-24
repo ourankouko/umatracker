@@ -586,3 +586,83 @@ if daily_num_col:
     )
     fig2.update_layout(xaxis_tickangle=-45)
     st.plotly_chart(fig2, use_container_width=True)
+
+# -----------------------------
+# Daily trend chart
+# -----------------------------
+
+st.divider()
+st.subheader("Daily Trend by Member")
+
+# Find Delta and Day columns automatically
+delta_cols = [col for col in df.columns if str(col).startswith("Delta ")]
+day_cols = [col for col in df.columns if str(col).startswith("Day ")]
+
+# Sort columns by day number
+delta_cols = sorted(delta_cols, key=lambda x: int(str(x).split(" ")[1]))
+day_cols = sorted(day_cols, key=lambda x: int(str(x).split(" ")[1]))
+
+chart_type = st.radio(
+    "Chart value",
+    ["Daily delta", "Total fans"],
+    horizontal=True
+)
+
+selected_members = st.multiselect(
+    "Select members",
+    options=active_data[name_col].dropna().sort_values().unique(),
+    default=active_data[name_col].dropna().sort_values().unique()[:5]
+)
+
+if chart_type == "Daily delta":
+    value_cols = delta_cols
+    value_name = "daily_delta"
+    chart_title = "Daily Fan Gain by Member"
+else:
+    value_cols = day_cols
+    value_name = "total_fans"
+    chart_title = "Total Fans by Member"
+
+trend_data = active_data[[name_col] + value_cols].copy()
+
+trend_long = trend_data.melt(
+    id_vars=name_col,
+    value_vars=value_cols,
+    var_name="day_label",
+    value_name=value_name
+)
+
+trend_long["day"] = (
+    trend_long["day_label"]
+    .str.extract(r"(\d+)")
+    .astype(float)
+)
+
+trend_long[value_name] = pd.to_numeric(
+    trend_long[value_name].astype(str).str.replace(",", "", regex=False),
+    errors="coerce"
+)
+
+trend_long = trend_long[
+    trend_long[name_col].isin(selected_members)
+].copy()
+
+trend_long = trend_long.dropna(subset=["day", value_name])
+
+fig = px.line(
+    trend_long,
+    x="day",
+    y=value_name,
+    color=name_col,
+    markers=True,
+    title=chart_title
+)
+
+fig.update_layout(
+    xaxis_title="Cycle day",
+    yaxis_title="Daily gain" if chart_type == "Daily delta" else "Total fans",
+    legend_title="Member",
+    hovermode="x unified"
+)
+
+st.plotly_chart(fig, use_container_width=True)
