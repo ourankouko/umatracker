@@ -114,7 +114,8 @@ if uploaded_file is None:
 df = pd.read_csv(uploaded_file)
 
 st.subheader("Raw columns")
-st.write(list(df.columns))
+with st.expander("Raw columns", expanded=False):
+    st.write(list(df.columns))
 
 
 # -----------------------------
