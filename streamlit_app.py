@@ -571,12 +571,12 @@ gap_to_target = st.number_input(
 )
 
 breakpoint_daily_gain = st.number_input(
-    "Estimated daily increase of target breakpoint",
+    "Estimated daily target breakpoint",
     min_value=0,
     value=0,
     step=1_000_000,
     format="%d",
-    help="Estimate how much the target breakpoint is increasing per day."
+    help="Estimate how much the target breakpoint is day."
 )
 
 pace_option = st.radio(
