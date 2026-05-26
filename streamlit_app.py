@@ -555,6 +555,86 @@ st.dataframe(
 
 
 # -----------------------------
+# Target rank / reward tier estimator
+# -----------------------------
+
+st.divider()
+st.subheader("Target Rank Estimator")
+
+gap_to_target = st.number_input(
+    "Gap to target rank / reward tier",
+    min_value=0,
+    value=0,
+    step=1_000_000,
+    format="%d",
+    help="Enter the fan gap needed to reach the target rank or reward tier, e.g. A rank."
+)
+
+breakpoint_daily_gain = st.number_input(
+    "Estimated daily increase of target breakpoint",
+    min_value=0,
+    value=0,
+    step=1_000_000,
+    format="%d",
+    help="Estimate how much the target breakpoint is increasing per day."
+)
+
+pace_option = st.radio(
+    "Estimate our club pace using",
+    ["Today's gain", "7-day average pace"],
+    horizontal=True
+)
+
+if pace_option == "Today's gain":
+    our_pace = daily_total
+else:
+    our_pace = avg_total
+
+net_closing_pace = our_pace - breakpoint_daily_gain
+
+c1, c2, c3 = st.columns(3)
+
+c1.metric("Our pace", f"{our_pace:,.0f}/day")
+c2.metric("Target breakpoint pace", f"{breakpoint_daily_gain:,.0f}/day")
+c3.metric("Net closing pace", f"{net_closing_pace:,.0f}/day")
+
+if gap_to_target > 0 and net_closing_pace > 0:
+    days_needed = gap_to_target / net_closing_pace
+    hours_needed = days_needed * 24
+    days_left = days_left_in_cycle()
+
+    st.metric(
+        "Estimated time to target",
+        f"{days_needed:.1f} days"
+    )
+
+    st.caption(
+        f"Gap to target: {gap_to_target:,.0f}. "
+        f"Our pace: {our_pace:,.0f}/day. "
+        f"Target breakpoint pace: {breakpoint_daily_gain:,.0f}/day. "
+        f"Net closing pace: {net_closing_pace:,.0f}/day."
+    )
+
+    if days_needed <= days_left:
+        st.success(
+            f"Reachable this cycle. Estimated {days_needed:.1f} days needed, "
+            f"with {days_left} days left."
+        )
+    else:
+        st.warning(
+            f"May not be reachable this cycle. Estimated {days_needed:.1f} days needed, "
+            f"but only {days_left} days left."
+        )
+
+elif gap_to_target == 0:
+    st.info("Enter the gap to the target rank or reward tier.")
+
+else:
+    st.warning(
+        "At the current assumptions, the target gap will not close because our pace is less than or equal to the target breakpoint pace."
+    )
+
+# -----------------------------
 # Charts
 # -----------------------------
 
